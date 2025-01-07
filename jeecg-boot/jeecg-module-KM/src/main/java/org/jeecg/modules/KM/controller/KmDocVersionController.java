@@ -1,8 +1,8 @@
 //package org.jeecg.modules.KM.controller;
 //
 //import java.util.Arrays;
-//import javax.servlet.http.HttpServletRequest;
-//import javax.servlet.http.HttpServletResponse;
+//import jakarta.servlet.http.HttpServletRequest;
+//import jakarta.servlet.http.HttpServletResponse;
 //import org.jeecg.common.api.vo.Result;
 //import org.jeecg.common.system.query.QueryGenerator;
 //import org.jeecg.modules.KM.entity.KmDocVersion;

@@ -11,10 +11,6 @@
 
     <artifactId>jeecg-module-KM</artifactId>
 
-    <properties>
-        <elasticsearch.version>7.6.2</elasticsearch.version>
-    </properties>
-
     <repositories>
         <repository>
             <id>aliyun</id>
@@ -39,29 +35,49 @@
             <groupId>org.jeecgframework.boot</groupId>
             <artifactId>jeecg-boot-base-core</artifactId>
         </dependency>
-
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-ollama-spring-boot-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-pgvector-store-spring-boot-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-pdf-document-reader</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-tika-document-reader</artifactId>
+		</dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>1.6.10</version> <!-- Use the latest version available -->
+        </dependency>
         <!--KM dependencies-->
-<dependency>
-	<groupId>org.opensearch.client</groupId>
-	<artifactId>spring-data-opensearch-starter</artifactId>
-	<version>1.6.0</version>
-	<exclusions>
-		<exclusion>
-			<groupId>org.opensearch.client</groupId>
-			<artifactId>opensearch-rest-high-level-client</artifactId>
-		</exclusion>
-	</exclusions>
-</dependency>
-<dependency>
-  <groupId>org.opensearch.client</groupId>
-  <artifactId>opensearch-rest-client</artifactId>
-  <version>2.18.0</version>
-</dependency>
-<dependency>
-	<groupId>org.opensearch.client</groupId>
-	<artifactId>opensearch-java</artifactId>
-	<version>2.11.1</version>
-</dependency>
+        <dependency>
+            <groupId>org.opensearch.client</groupId>
+            <artifactId>spring-data-opensearch-starter</artifactId>
+            <version>1.6.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.opensearch.client</groupId>
+                    <artifactId>opensearch-rest-high-level-client</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+        <groupId>org.opensearch.client</groupId>
+        <artifactId>opensearch-rest-client</artifactId>
+        <version>2.18.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opensearch.client</groupId>
+            <artifactId>opensearch-java</artifactId>
+            <version>2.11.1</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>

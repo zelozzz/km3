@@ -46,7 +46,7 @@ public class KmDocFavouriteServiceImpl extends ServiceImpl<KmDocFavouriteMapper,
             queryWrapper.eq(KmDocFavourite::getUserId,sysUser.getId());
             queryWrapper.eq(KmDocFavourite::getDocId,docId);
             if(this.count(queryWrapper) >=1) {
-                Integer count = this.count(queryWrapper);
+                Long count = this.count(queryWrapper);
                 return Result.error("已经收藏的文档无需再次收藏");
             }
 

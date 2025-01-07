@@ -94,10 +94,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.Resource;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -1366,7 +1366,7 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
         QueryWrapper<KmDoc> queryWrapper = new QueryWrapper<>();
         queryWrapper.ne("status",9);
         queryWrapper.eq("category",category);
-        Integer selectCount = baseMapper.selectCount(queryWrapper);
+        Long selectCount = baseMapper.selectCount(queryWrapper);
         return selectCount > 0;
     }
 
@@ -1580,7 +1580,7 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
             List<KmSearchResultVO> kmSearchResultVOList = retrieveDocDbInfo(kmDocEsVOList);
             resultVOPage.setRecords(kmSearchResultVOList);
             resultVOPage.setTotal(searchResponse.hits().total().value());
-            resultVOPage.setHitCount(searchResponse.hits().total().value() > 0);
+            resultVOPage.setSearchCount(searchResponse.hits().total().value() > 0);
             kmSearchResultObjVO.setKmSearchResultVOPage(resultVOPage);
             kmSearchResultObjVO.setSuccess(true);
         }
@@ -1677,7 +1677,7 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
             List<KmSearchResultVO> kmSearchResultVOList = retrieveDocDbInfo(kmDocEsVOList);
             resultVOPage.setRecords(kmSearchResultVOList);
             resultVOPage.setTotal(searchResponse.hits().total().value());
-            resultVOPage.setHitCount(searchResponse.hits().total().value() > 0);
+            resultVOPage.setSearchCount(searchResponse.hits().total().value() > 0);
             kmSearchResultObjVO.setKmSearchResultVOPage(resultVOPage);
             kmSearchResultObjVO.setSuccess(true);
         }

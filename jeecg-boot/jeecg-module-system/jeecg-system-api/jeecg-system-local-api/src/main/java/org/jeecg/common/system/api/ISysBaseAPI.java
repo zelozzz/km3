@@ -544,4 +544,41 @@ public interface ISysBaseAPI extends CommonAPI {
      */
     boolean dictTableWhiteListCheckByDict(String tableOrDictCode, String... fields);
 
+   /**
+     * KM module add the following code.
+     * @param categoryCode
+     * @return
+    */
+        /**
+     * 42 根据分类字典code获取字典name
+     * @param categoryCode
+     */
+    String queryCategoryNameByCode(String categoryCode);
+
+    /**
+     * 43 根据分类字典id获取字典name
+     * @param categoryId
+     */
+    String queryCategoryNameById(String categoryId);
+
+    /**
+     * 44 根据部门id(逗号分隔)，查询返回部门信息code
+     * @param id
+     * @return
+     */
+    String queryDepartOrgCodeById(String id);
+    /**
+     * 45 根据分类字典code获取字典
+     * @param categoryCode
+     */
+    SysCategoryModel queryCategoryByCode(String categoryCode);
+    /**
+     * 46 获取推荐的专题
+     * @param
+     */
+    List<SysCategoryModel> queryCategoryRecommend();
+
+    /** 47，查询业务类型字典列表 */
+    List<DictModel> queryDictItemList(String dictCode);    
+
 }

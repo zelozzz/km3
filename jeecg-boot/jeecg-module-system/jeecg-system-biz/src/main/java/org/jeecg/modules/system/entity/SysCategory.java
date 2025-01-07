@@ -53,6 +53,10 @@ public class SysCategory implements Serializable,Comparable<SysCategory>{
 	/**租户ID*/
 	private java.lang.Integer tenantId;
 
+	/* KM module add */
+	/**用于首页推荐 */
+	private java.lang.Boolean recommend;
+
 	@Override
 	public int compareTo(SysCategory o) {
 		//比较条件我们定的是按照code的长度升序

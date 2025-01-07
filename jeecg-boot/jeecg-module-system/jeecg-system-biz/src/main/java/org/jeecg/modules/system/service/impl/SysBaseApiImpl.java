@@ -137,6 +137,10 @@ public class SysBaseApiImpl implements ISysBaseAPI {
 	@Autowired
 	private IDictTableWhiteListHandler dictTableWhiteListHandler;
 
+	/* KM module add. */
+	@Autowired
+	private ISysDictItemService sysDictItemService;
+
 	@Override
 	//@SensitiveDecode
 	public LoginUser getUserByName(String username) {
@@ -1818,5 +1822,91 @@ public class SysBaseApiImpl implements ISysBaseAPI {
 			return dictTableWhiteListHandler.isPassByDict(tableOrDictCode, fields);
 		}
 	}
+
+	/**
+	 * KM add module impl 
+	 */
+	//	@Cacheable(value = "sys_category")
+	@Override
+	public String queryCategoryNameByCode(String categoryCode){
+		SysCategoryModel sysCategoryModel = queryCategoryByCode(categoryCode);
+		if(sysCategoryModel != null)
+			return sysCategoryModel.getName();
+		else
+			return "";
+	//		return categoryMapper.queryNameByCode(categoryCode);
+	}
+	//	@Cacheable(value = "sys_category")
+	@Override
+	public String queryCategoryNameById(String categoryId){
+		return categoryMapper.queryNameByCode(categoryId);
+	}
+
+	@Override
+	public String queryDepartOrgCodeById(String id) {
+		LambdaQueryWrapper<SysDepart> queryWrapper =  new LambdaQueryWrapper<>();
+		queryWrapper.eq(SysDepart::getId,id);
+		SysDepart sysDepart =sysDepartService.getOne(queryWrapper);
+		if( sysDepart!= null){
+			return sysDepart.getOrgCode();
+		}
+		else
+			return "";
+	}
+
+	@Cacheable(value = "sys_category")
+	@Override
+	public SysCategoryModel queryCategoryByCode(String categoryCode){
+		LambdaQueryWrapper<SysCategory> queryWrapper = new LambdaQueryWrapper<>();
+		queryWrapper.eq(SysCategory::getCode,categoryCode);
+		SysCategory sysCategory = sysCategoryService.getOne(queryWrapper);
+		if(sysCategory != null)
+			return oConvertUtils.entityToModel(sysCategory,SysCategoryModel.class);
+
+		return null;
+	}
+		/**
+	 * 获取推荐首页的专题
+	 * @param
+	 * @return
+	 */
+	@Override
+	public List<SysCategoryModel> queryCategoryRecommend(){
+		LambdaQueryWrapper<SysCategory> queryWrapper = new LambdaQueryWrapper<>();
+		queryWrapper.eq(SysCategory::getRecommend,true);
+		List<SysCategory> sysCategories = sysCategoryService.list(queryWrapper);
+		if(sysCategories != null && !sysCategories.isEmpty()){
+			return oConvertUtils.entityListToModelList(sysCategories,SysCategoryModel.class);
+		}
+		return null;
+	}
+
+	/**
+	 * 获取首页的业务列表
+	 * @param
+	 * @return
+	 */
+	@Override
+	public List<DictModel> queryDictItemList(String dictCode) {
+		LambdaQueryWrapper<SysDict> queryWrapper = new LambdaQueryWrapper<SysDict>();
+		queryWrapper.eq(SysDict::getDictCode,dictCode);
+		SysDict dict = sysDictService.getOne(queryWrapper);
+		if(dict != null) {
+			LambdaQueryWrapper<SysDictItem> queryWrapperItem = new LambdaQueryWrapper<>();
+			queryWrapperItem.eq(SysDictItem::getDictId,dict.getId());
+			queryWrapperItem.orderByAsc(SysDictItem::getSortOrder);
+			List<SysDictItem> dictItemList = sysDictItemService.list(queryWrapperItem);
+			if(!dictItemList.isEmpty()) {
+				// 封装成 model
+				List<DictModel> dictItemModelList = new ArrayList<DictModel>();
+				for (SysDictItem dictItem : dictItemList) {
+					dictItemModelList.add(new DictModel(dictItem.getItemValue(), dictItem.getItemText()));
+				}
+				return dictItemModelList;
+			}
+		}
+		return  null;
+	}
+
 
 }

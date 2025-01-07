@@ -48,4 +48,8 @@ public interface SysCategoryMapper extends BaseMapper<SysCategory> {
 	@InterceptorIgnore(tenantLine = "true")
 	@Select("SELECT code FROM sys_category WHERE ID = #{id}")
 	SysCategory selectSysCategoryById(@Param("id") String id);
+
+	/* KM module add */
+	@Select("SELECT name FROM sys_category WHERE CODE = #{code,jdbcType=VARCHAR}")
+	public String queryNameByCode(@Param("code")  String code);
 }

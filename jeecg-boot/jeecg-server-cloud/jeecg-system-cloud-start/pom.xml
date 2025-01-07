@@ -32,7 +32,7 @@
             <exclusions>
                 <exclusion>
                     <groupId>org.jeecgframework.boot</groupId>
-                    <artifactId>jeecg-module-demo</artifactId>
+                    <artifactId>jeecg-module-KM</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

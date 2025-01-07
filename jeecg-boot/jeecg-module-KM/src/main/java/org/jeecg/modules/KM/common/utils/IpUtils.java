@@ -3,7 +3,7 @@ package org.jeecg.modules.KM.common.utils;
 import lombok.extern.slf4j.Slf4j;
 //import me.zhyd.oauth.log.Log;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 
 @Slf4j

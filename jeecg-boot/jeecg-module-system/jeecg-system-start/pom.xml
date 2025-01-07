@@ -21,7 +21,7 @@
         <!-- DEMO 示例模块 -->
         <dependency>
             <groupId>org.jeecgframework.boot</groupId>
-            <artifactId>jeecg-module-demo</artifactId>
+            <artifactId>jeecg-module-KM</artifactId>
             <version>${jeecgboot.version}</version>
         </dependency>
         

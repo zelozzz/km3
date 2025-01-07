@@ -80,6 +80,7 @@
 		<!-- spring boot 3 不支持下列两个版本-->
 		<!--<log4j2.version>2.17.0</log4j2.version>
 		<logback.version>1.2.9</logback.version>-->
+        	<spring-ai.version>1.0.0-SNAPSHOT</spring-ai.version>
 	</properties>
 
 	<modules>
@@ -157,6 +158,13 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>${spring-ai.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<!-- spring-cloud-->
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
