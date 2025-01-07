@@ -27,11 +27,12 @@ public class OssConfiguration {
 
 
     @Bean
-    public void initOssBootConfiguration() {
+    public String initOssBootConfiguration() {
         OssBootUtil.setEndPoint(endpoint);
         OssBootUtil.setAccessKeyId(accessKeyId);
         OssBootUtil.setAccessKeySecret(accessKeySecret);
         OssBootUtil.setBucketName(bucketName);
         OssBootUtil.setStaticDomain(staticDomain);
+        return staticDomain;
     }
 }

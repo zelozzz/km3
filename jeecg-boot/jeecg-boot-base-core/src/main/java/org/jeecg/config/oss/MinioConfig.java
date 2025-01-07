@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
+import io.minio.*;
 /**
  * Minio文件上传配置文件
  * @author: jeecg-boot
@@ -25,9 +25,10 @@ public class MinioConfig {
     private String minioPass;
     @Value(value = "${jeecg.minio.bucketName}")
     private String bucketName;
-
+    
+    private static MinioClient minioClient = null;
     @Bean
-    public void initMinio(){
+    public MinioClient initMinio(){
         if(!minioUrl.startsWith(CommonConstant.STR_HTTP)){
             minioUrl = "http://" + minioUrl;
         }
@@ -38,6 +39,17 @@ public class MinioConfig {
         MinioUtil.setMinioName(minioName);
         MinioUtil.setMinioPass(minioPass);
         MinioUtil.setBucketName(bucketName);
+        if (minioClient == null) {
+            try {
+                minioClient = MinioClient.builder()
+                        .endpoint(minioUrl)
+                        .credentials(minioName, minioPass)
+                        .build();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return minioClient;
     }
 
 }
