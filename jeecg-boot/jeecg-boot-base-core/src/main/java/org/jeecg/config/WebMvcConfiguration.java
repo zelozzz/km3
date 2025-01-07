@@ -10,7 +10,7 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+//import io.micrometer.prometheus.PrometheusMeterRegistry;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
@@ -55,8 +55,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     @Value("${spring.resource.static-locations:}")
     private String staticLocations;
 
-    @Autowired(required = false)
-    private PrometheusMeterRegistry prometheusMeterRegistry;
+    //@Autowired(required = false)
+    //private PrometheusMeterRegistry prometheusMeterRegistry;
 
     /**
      * 静态资源的配置 - 使得可以从磁盘中读取 Html、图片、视频、音频等
@@ -148,7 +148,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
      */
     @Bean
     InitializingBean forcePrometheusPostProcessor(BeanPostProcessor meterRegistryPostProcessor) {
-        return () -> meterRegistryPostProcessor.postProcessAfterInitialization(prometheusMeterRegistry, "");
+        //return () -> meterRegistryPostProcessor.postProcessAfterInitialization(prometheusMeterRegistry, "");
+        return null;
     }
 
 //    /**

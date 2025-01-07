@@ -90,7 +90,7 @@
 		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-prometheus</artifactId>
-			<version>1.11.5</version> <!-- 确认与Spring Boot版本兼容 -->
+			<version>1.11.12</version>
 		</dependency>
 
 		<!-- commons -->
