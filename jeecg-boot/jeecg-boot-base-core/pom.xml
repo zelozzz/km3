@@ -10,7 +10,7 @@
 	<artifactId>jeecg-boot-base-core</artifactId>
 
 	<properties>
-		<spring-boot.version>3.1.5</spring-boot.version>
+		<spring-boot.version>3.4.1</spring-boot.version>
 	</properties>
 
 	<repositories>
@@ -90,6 +90,7 @@
 		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-prometheus</artifactId>
+			<version>1.11.5</version> <!-- 确认与Spring Boot版本兼容 -->
 		</dependency>
 
 		<!-- commons -->
