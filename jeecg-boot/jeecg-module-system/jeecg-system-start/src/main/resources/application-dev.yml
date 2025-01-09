@@ -1,3 +1,14 @@
+base:
+  upload-dir: /kykms/kmdocs 
+  db-backup-dir: /kykms/db
+  soffice-path: /usr/bin/soffice 
+  one-system-url:
+esclient:
+  master-host: kykms-ES 
+  master-port: 9200
+  master-auth: true
+  master-user-name: admin
+  master-user-pwd: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD:secret}
 server:
   port: 8080
   undertow:

@@ -101,6 +101,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.annotation.Lazy;
 
 @Service
 @Slf4j
@@ -138,6 +139,7 @@ public class KmDocServiceImpl extends ServiceImpl<KmDocMapper, KmDoc> implements
     private IKmSearchRecordService kmSearchRecordService;
     @Autowired
     private KMRedisUtils KMRedisUtils;
+    @Lazy
     @Autowired
     private IKmDocFavouriteService kmDocFavouriteService;
     @Autowired
