@@ -11,6 +11,7 @@ import org.jeecg.modules.KM.VO.KmDocParamVO;
 import org.jeecg.modules.KM.VO.KmDocVO;
 import org.jeecg.modules.KM.entity.KmDocFavourite;
 import org.jeecg.modules.KM.service.IKmDocFavouriteService;
+import org.jeecg.modules.KM.service.IKmDocService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -30,6 +31,8 @@ import org.jeecg.common.aspect.annotation.AutoLog;
 public class KmDocFavouriteController extends JeecgController<KmDocFavourite, IKmDocFavouriteService> {
 	@Autowired
 	private IKmDocFavouriteService kmDocFavouriteService;
+	@Autowired
+	private IKmDocService kmDocService;
 	
 	/**
 	 * 分页列表查询
@@ -75,7 +78,7 @@ public class KmDocFavouriteController extends JeecgController<KmDocFavourite, IK
 	@PostMapping(value = "/add")
 	public Result<?> add(@RequestParam(name = "docId") String docId) {
 
-		return kmDocFavouriteService.addFavouriteDoc(docId);
+		return kmDocService.addFavouriteDoc(docId);
 	}
 	
 	/**
@@ -103,7 +106,7 @@ public class KmDocFavouriteController extends JeecgController<KmDocFavourite, IK
 	@DeleteMapping(value = "/delete")
 	public Result<?> delete(@RequestParam(name="docId",required=true) String docId) {
 
-		return kmDocFavouriteService.delFavouriteDoc(docId);
+		return kmDocService.delFavouriteDoc(docId);
 	}
 	
 	/**

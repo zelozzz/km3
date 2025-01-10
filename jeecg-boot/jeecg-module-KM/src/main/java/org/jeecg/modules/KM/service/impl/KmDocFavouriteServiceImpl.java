@@ -26,8 +26,6 @@ public class KmDocFavouriteServiceImpl extends ServiceImpl<KmDocFavouriteMapper,
     @Autowired
     private  KmDocFavouriteMapper kmDocFavouriteMapper;
 
-    @Autowired
-    private IKmDocService kmDocService;
     @Override
     public Page<KmDocVO> queryPageList(Page<KmDocVO> page, String userId,  KmDocParamVO kmDocParamVO,String orderBy){
         String dbType = CommonUtils.getDatabaseType();
@@ -55,11 +53,6 @@ public class KmDocFavouriteServiceImpl extends ServiceImpl<KmDocFavouriteMapper,
             kmDocFavourite.setDocId(docId);
             kmDocFavourite.setAddTime(DateUtils.getDate());
             if(super.save(kmDocFavourite)) {
-                KmDoc kmDoc = kmDocService.getById(kmDocFavourite.getDocId());
-                if (kmDoc != null) {
-                    kmDoc.setFavourites(kmDoc.getFavourites() == null ? BigInteger.valueOf(1) : kmDoc.getFavourites().add(BigInteger.valueOf(1)));
-                    kmDocService.updateById(kmDoc);
-                }
                 return Result.OK();
             }
             else
@@ -82,11 +75,6 @@ public class KmDocFavouriteServiceImpl extends ServiceImpl<KmDocFavouriteMapper,
             if(this.count(queryWrapper) !=1)
                 return Result.error("数据异常");
             if(kmDocFavouriteMapper.delete(queryWrapper)>0) {
-                KmDoc kmDoc = kmDocService.getById(docId);
-                if (kmDoc != null) {
-                    kmDoc.setFavourites(kmDoc.getFavourites() == null ? BigInteger.valueOf(1) : kmDoc.getFavourites().subtract(BigInteger.valueOf(1)));
-                    kmDocService.updateById(kmDoc);
-                }
                 return Result.OK();
             }
             else

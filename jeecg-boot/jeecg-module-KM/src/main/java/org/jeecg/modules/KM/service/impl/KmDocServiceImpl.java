@@ -101,7 +101,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.context.annotation.Lazy;
 
 @Service
 @Slf4j
@@ -139,13 +138,13 @@ public class KmDocServiceImpl extends ServiceImpl<KmDocMapper, KmDoc> implements
     private IKmSearchRecordService kmSearchRecordService;
     @Autowired
     private KMRedisUtils KMRedisUtils;
-    @Lazy
     @Autowired
     private IKmDocFavouriteService kmDocFavouriteService;
     @Autowired
     private IKmSysConfigService kmSysConfigService;
     @Autowired
     private IKmDocVersionService kmDocVersionService;
+
 
     private File M2F(MultipartFile file) throws Exception {
         File f=File.createTempFile(UUID.randomUUID().toString(), "." + FilenameUtils.getExtension(file.getOriginalFilename()));
@@ -1686,4 +1685,41 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
     
         return kmSearchResultObjVO;
     }
+    
+    /*
+    增加收藏文档
+     */
+    @Override
+    public Result<?> addFavouriteDoc(String docId){
+        Result<?> favoriteResult = kmDocFavouriteService.addFavouriteDoc(docId);
+        if (favoriteResult.isSuccess()) { 
+            KmDoc kmDoc = this.getById(docId);
+            if (kmDoc != null) {
+                kmDoc.setFavourites(kmDoc.getFavourites() == null ? BigInteger.valueOf(1) : kmDoc.getFavourites().add(BigInteger.valueOf(1)));
+                this.updateById(kmDoc);
+            }
+            return Result.OK();
+        }
+        else
+            return Result.error("保存数据失败");
+    }
+
+    /*
+    删除收藏文档
+     */
+    @Override
+    public Result<?> delFavouriteDoc(String docId){
+        Result<?> favoriteResult = kmDocFavouriteService.delFavouriteDoc(docId);
+        if (favoriteResult.isSuccess()) { 
+            KmDoc kmDoc = this.getById(docId);
+            if (kmDoc != null) {
+                kmDoc.setFavourites(kmDoc.getFavourites() == null ? BigInteger.valueOf(1) : kmDoc.getFavourites().subtract(BigInteger.valueOf(1)));
+                this.updateById(kmDoc);
+           }
+           return Result.OK();
+       }
+       else
+           return Result.error("删除数据失败");
+    }
+
 }

@@ -86,4 +86,8 @@ public interface IKmDocService extends IService<KmDoc> {
     KmDocSummaryVO queryKmDocSummary();
 
     List<KmDoc> getReleasedDocs();
+   
+    Result<?> addFavouriteDoc(String docId);
+
+    Result<?> delFavouriteDoc(String docId); 
 }
