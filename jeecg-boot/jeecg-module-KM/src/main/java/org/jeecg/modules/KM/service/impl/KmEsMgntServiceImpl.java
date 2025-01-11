@@ -76,8 +76,8 @@ public class KmEsMgntServiceImpl  implements IKmEsMgntService {
                 .name(templateName)
                 .build();
 
-        BooleanResponse response = openSearchClient.indices().existsIndexTemplate​(request);
-
+        BooleanResponse response = openSearchClient.indices().existsIndexTemplate(request);
+        log.info("check template exists: " + templateName + " status: " + response.value());
         return response.value();
     }
 

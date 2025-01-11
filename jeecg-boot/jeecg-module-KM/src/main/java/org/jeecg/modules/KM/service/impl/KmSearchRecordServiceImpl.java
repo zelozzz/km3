@@ -114,14 +114,25 @@ public class KmSearchRecordServiceImpl extends ServiceImpl<KmSearchRecordMapper,
                 .build();
     
         // 构建搜索请求
-        SearchRequest searchRequest = new SearchRequest.Builder()
+	SearchRequest searchRequest = null;
+        SearchResponse<Object> searchResponse = null;
+	try{
+           searchRequest = new SearchRequest.Builder()
                 .index(KMConstant.KMSearchRecordIndexAliasName)
                 .aggregations("keyword", new Aggregation.Builder().terms(aggregation).build())
                 .timeout(String.format("%ss",KMConstant.SearchTimeOutSeconds))
                 .build();
-    
+
         // 执行搜索
-        SearchResponse<Object> searchResponse = openSearchClient.search(searchRequest, Object.class);
+           searchResponse = openSearchClient.search(searchRequest, Object.class);
+        }catch(Exception e){
+	   {
+		log.error("exception when  search the record result");
+	   }
+	   return null;	
+	}
+        // 执行搜索
+        searchResponse = openSearchClient.search(searchRequest, Object.class);
     
         // 检查搜索结果
         if (searchResponse.hits().total().value() <= 0) {
@@ -143,7 +154,7 @@ public class KmSearchRecordServiceImpl extends ServiceImpl<KmSearchRecordMapper,
     @Override
     public List<SysCategoryModel> retriveHotTopic() throws IOException {
         List<SysCategoryModel> result = new ArrayList<>();
-    
+        try{ 
         // 构建聚合
         TermsAggregation aggregation = new TermsAggregation.Builder()
                 .field("topicCodes")
@@ -177,6 +188,9 @@ public class KmSearchRecordServiceImpl extends ServiceImpl<KmSearchRecordMapper,
                 }
             }
         }
+	}catch(Exception e){
+	  log.warn("exception in search log, maybe it's the first run, you can ignore it.");
+	}
         return result;
     }
 
@@ -196,7 +210,8 @@ public class KmSearchRecordServiceImpl extends ServiceImpl<KmSearchRecordMapper,
             }
         }
         catch (IOException e){
-            e.printStackTrace();
+            //e.printStackTrace();
+	    log.warn("Not found all hotTopics, but this does not matter, maybe its the first run.");
             return result;
         }
         return result;
