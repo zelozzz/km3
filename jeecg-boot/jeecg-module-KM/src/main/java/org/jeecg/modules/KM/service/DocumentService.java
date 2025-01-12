@@ -61,21 +61,21 @@ public class DocumentService {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		List<Document> documentList = paragraphTextReader(file1);
-		vectorStore.add(documentList);
+		//List<Document> documentList = paragraphTextReader(file1);
+		//vectorStore.add(documentList);
 	}
 
-	private List<Document> paragraphTextReader(File file) {
+	public void paragraphTextReader(String documentContent, String name, String abspath) {
 		List<Document> docs = null;
 		try {
-			ParagraphTextReader reader = new ParagraphTextReader(new FileUrlResource(file.toURI().toURL()), 5);
-			reader.getCustomMetadata().put("filename", file.getName());
-			reader.getCustomMetadata().put("filepath", file.getAbsolutePath());
+			ParagraphTextReader reader = new ParagraphTextReader(documentContent, 5);
+			reader.getCustomMetadata().put("filename", name);
+			reader.getCustomMetadata().put("filepath", abspath);
 			docs = reader.get();
+			vectorStore.add(docs);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return docs;
 	}
 
 	/**

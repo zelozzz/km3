@@ -16,6 +16,7 @@ import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.transport.rest_client.RestClientTransport;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.apache.http.HttpHost;
+import org.apache.http.client.config.RequestConfig;
 
 @Configuration
 @ConfigurationProperties(prefix = "esclient")
@@ -100,6 +101,12 @@ public OpenSearchClient openSearchClientWithAuth() {
     RestClientBuilder builder = RestClient.builder(new HttpHost(hostname, port, scheme))
         .setHttpClientConfigCallback(httpClientBuilder -> {
             httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+        // 设置超时
+        RequestConfig requestConfig = RequestConfig.custom()
+            .setConnectTimeout(60000) // 连接超时时间（毫秒）
+            .setSocketTimeout(60000) // 读取超时时间（毫秒）
+            .build();
+        httpClientBuilder.setDefaultRequestConfig(requestConfig);
             return httpClientBuilder;
         });
 

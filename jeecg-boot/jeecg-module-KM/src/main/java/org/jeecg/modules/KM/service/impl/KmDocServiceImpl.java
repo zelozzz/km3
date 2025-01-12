@@ -101,6 +101,27 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.jeecg.modules.KM.reader.ParagraphTextReader.END_PARAGRAPH_NUMBER;
+import static org.jeecg.modules.KM.reader.ParagraphTextReader.START_PARAGRAPH_NUMBER;
+
+import cn.hutool.core.util.ArrayUtil;
+import org.jeecg.modules.KM.reader.ParagraphTextReader;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.ollama.OllamaChatModel;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileUrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 
 @Service
 @Slf4j
@@ -144,7 +165,11 @@ public class KmDocServiceImpl extends ServiceImpl<KmDocMapper, KmDoc> implements
     private IKmSysConfigService kmSysConfigService;
     @Autowired
     private IKmDocVersionService kmDocVersionService;
+	@Autowired
+	private VectorStore vectorStore;
 
+	@Autowired
+	private OllamaChatModel ollamaChatModel;
 
     private File M2F(MultipartFile file) throws Exception {
         File f=File.createTempFile(UUID.randomUUID().toString(), "." + FilenameUtils.getExtension(file.getOriginalFilename()));
@@ -505,6 +530,7 @@ public class KmDocServiceImpl extends ServiceImpl<KmDocMapper, KmDoc> implements
                     kmDocEsVO.setContent(content);
                     //保存数据到ES
                     Result<?> result = this.saveDocToEs(kmDocEsVO,null);
+		    this.saveDocToVectorStore(content,"who-knows", "who-care");
                     if(result.getCode() == CommonConstant.SC_OK_200){
                         kmDoc.setFtiFlag(DocFTIFlagEnum.Processed.getCode());
                         kmDoc.setReleaseFlag(DocReleaseFlagEnum.Released.getCode());
@@ -1473,6 +1499,11 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
     }
 
     public KmSearchResultObjVO searchESKmDoc(Page<KmSearchResultVO> page, KmDocEsParamVO kmDocEsParamVO, HttpServletRequest req) throws IOException {
+	try {    
+	    chat(kmDocEsParamVO.getContent());
+	}catch(Exception e){
+	    log.warn("exception: the vectorstore maybe empty which trigger the exception");
+	}
         Map<String, String[]> parameterMap = req.getParameterMap();
         List<KmDocEsVO> kmDocEsVOList = new ArrayList<>();
         Page<KmSearchResultVO> resultVOPage = new Page<>(page.getCurrent(), page.getSize());
@@ -1721,5 +1752,114 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
        else
            return Result.error("删除数据失败");
     }
+   public void saveDocToVectorStore(String documentContent, String name, String abspath){
+  		List<Document> docs = null;
+		try {
+			ParagraphTextReader reader = new ParagraphTextReader(documentContent, 5);
+			reader.getCustomMetadata().put("filename", name);
+			reader.getCustomMetadata().put("filepath", abspath);
+			docs = reader.get();
+			vectorStore.add(docs);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+ 
+   }
+  
+	/**
+	 * 合并文档列表
+	 *
+	 * @param documentList 文档列表
+	 * @return 合并后的文档列表
+	 */
+	private List<Document> mergeDocuments(List<Document> documentList) {
+		List<Document> mergeDocuments = new ArrayList();
+		//根据文档来源进行分组
+		Map<String, List<Document>> documentMap = documentList.stream().collect(Collectors.groupingBy(item -> ((String) item.getMetadata().get("source"))));
+		for (Entry<String, List<Document>> docListEntry : documentMap.entrySet()) {
+			//获取最大的段落结束编码
+			int maxParagraphNum = (int) docListEntry.getValue()
+					.stream().max(Comparator.comparing(item -> ((int) item.getMetadata().get(END_PARAGRAPH_NUMBER)))).get().getMetadata().get(END_PARAGRAPH_NUMBER);
+			//根据最大段落结束编码构建一个用于合并段落的空数组
+			String[] paragraphs = new String[maxParagraphNum];
+			//用于获取最小段落开始编码
+			int minParagraphNum = maxParagraphNum;
+			for (Document document : docListEntry.getValue()) {
+				//文档内容根据回车进行分段
+				String[] tempPs = document.getContent().split("\n");
+				//获取文档开始段落编码
+				int startParagraphNumber = (int) document.getMetadata().get(START_PARAGRAPH_NUMBER);
+				if (minParagraphNum > startParagraphNumber) {
+					minParagraphNum = startParagraphNumber;
+				}
+				//将文档段落列表拷贝到合并段落数组中
+				System.arraycopy(tempPs, 0, paragraphs, startParagraphNumber - 1, tempPs.length);
+			}
+			//合并段落去除空值,并组成文档内容
+			Document mergeDoc = new Document(ArrayUtil.join(ArrayUtil.removeNull(paragraphs), "\n"));
+			//合并元数据
+			mergeDoc.getMetadata().putAll(docListEntry.getValue().get(0).getMetadata());
+			//设置元数据:开始段落编码
+			mergeDoc.getMetadata().put(START_PARAGRAPH_NUMBER, minParagraphNum);
+			//设置元数据:结束段落编码
+			mergeDoc.getMetadata().put(END_PARAGRAPH_NUMBER, maxParagraphNum);
+			mergeDocuments.add(mergeDoc);
+		}
+		return mergeDocuments;
+	}
 
+	/**
+	 * 根据关键词搜索向量库
+	 *
+	 * @param keyword 关键词
+	 * @return 文档列表
+	 */
+	public List<Document> search(String keyword) {
+		if(keyword != null){
+		   return mergeDocuments(vectorStore.similaritySearch(keyword));
+		}else{
+		   return null;
+		}
+	}
+
+	/**
+	 * 问答,根据输入内容回答
+	 *
+	 * @param message 输入内容
+	 * @return 回答内容
+	 */
+	public String chat(String message) {
+		//查询获取文档信息
+	    if(message != null && message.length() > 0){
+		log.info("Chat with VectorStore and ollama: "+ message);
+		List<Document> documents = search(message);
+
+		//提取文本内容
+		String content = documents.stream()
+				.map(Document::getContent)
+				.collect(Collectors.joining("\n"));
+
+		//封装prompt并调用大模型
+		String chatResponse = ollamaChatModel.call(getChatPrompt2String(message, content));
+		log.info("Chat response: " + chatResponse);
+		return chatResponse;
+	    }else{
+		    return null;
+	    }
+	}
+
+	/**
+	 * 获取prompt
+	 *
+	 * @param message 提问内容
+	 * @param context 上下文
+	 * @return prompt
+	 */
+	private String getChatPrompt2String(String message, String context) {
+		String promptText = """
+				请用仅用以下内容回答"%s":
+				%s
+				""";
+		return String.format(promptText, message, context);
+	}
 }

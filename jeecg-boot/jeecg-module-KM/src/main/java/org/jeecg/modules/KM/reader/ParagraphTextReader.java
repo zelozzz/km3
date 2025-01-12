@@ -12,8 +12,6 @@ import java.util.Map;
 import java.util.Objects;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.document.DocumentReader;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.Resource;
 import org.springframework.util.StreamUtils;
 
 /**
@@ -29,10 +27,9 @@ public class ParagraphTextReader implements DocumentReader {
 	public static final String SOURCE_METADATA = "source";
 
 	/**
-	 * Input resource to load the text from.
+	 * Input content to load the text from.
 	 */
-	private final Resource resource;
-
+	private final String documentContent;
 	/**
 	 * @return Character set to be used when loading data from the
 	 */
@@ -53,22 +50,12 @@ public class ParagraphTextReader implements DocumentReader {
 
 	private final Map<String, Object> customMetadata = new HashMap<>();
 
-	public ParagraphTextReader(String resourceUrl) {
-		this(new DefaultResourceLoader().getResource(resourceUrl));
+	public ParagraphTextReader(String documentContent) {
+		this(documentContent, 1);
 	}
-
-	public ParagraphTextReader(Resource resource) {
-		Objects.requireNonNull(resource, "The Spring Resource must not be null");
-		this.resource = resource;
-	}
-
-	public ParagraphTextReader(String resourceUrl, int windowSize) {
-		this(new DefaultResourceLoader().getResource(resourceUrl), windowSize);
-	}
-
-	public ParagraphTextReader(Resource resource, int windowSize) {
-		Objects.requireNonNull(resource, "The Spring Resource must not be null");
-		this.resource = resource;
+	public ParagraphTextReader(String documentContent, int windowSize) {
+		Objects.requireNonNull(documentContent, "The Spring content must not be null");
+		this.documentContent = documentContent;
 		this.windowSize = windowSize;
 	}
 
@@ -97,16 +84,14 @@ public class ParagraphTextReader implements DocumentReader {
 	 */
 	@Override
 	public List<Document> get() {
-		try {
 
 			List<Document> readDocuments = new ArrayList();
-			String document = StreamUtils.copyToString(this.resource.getInputStream(), this.charset);
 
 			// Inject source information as a metadata.
 			this.customMetadata.put(CHARSET_METADATA, this.charset.name());
-			this.customMetadata.put(SOURCE_METADATA, this.resource.getFilename());
+			this.customMetadata.put(SOURCE_METADATA, "in-memory-string");
 
-			List<String> paragraphs = Arrays.asList(document.split("\n"));
+			List<String> paragraphs = Arrays.asList(documentContent.split("\n"));
 
 			//采用窗口滑动读取
 			int startIndex = 0;
@@ -119,9 +104,6 @@ public class ParagraphTextReader implements DocumentReader {
 				}
 			}
 			return readDocuments;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	/**

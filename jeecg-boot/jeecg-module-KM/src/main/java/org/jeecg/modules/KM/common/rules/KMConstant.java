@@ -33,7 +33,7 @@ public class KMConstant {
 
     public static Integer SearchTimeOutSeconds = 10;     //秒
     public static Integer SaveTimeOutHours = 1;     //1小时
-    public static Integer SaveTimeOutMinutes = 1;     //1分钟
+    public static Integer SaveTimeOutMinutes = 5;     //5分钟
     public static String InnerUser = "1";
     public static String PublicUser = "0";
     public static Integer DocPublic = 1;

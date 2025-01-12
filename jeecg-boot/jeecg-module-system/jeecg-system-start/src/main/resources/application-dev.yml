@@ -37,6 +37,16 @@ management:
         include: metrics,httpexchanges,httptrace-new
 
 spring:
+  ai:
+    vectorstore:
+      pgvector:
+        dimensions: 768
+    ollama:
+      base-url: http://jeecg-boot-ollama-1:11434
+      chat:
+        model: qwen2
+      embedding:
+        model: mofanke/dmeta-embedding-zh
   # flyway配置
   flyway:
     # 是否启用flyway
