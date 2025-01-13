@@ -13,7 +13,8 @@ import java.util.Objects;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.document.DocumentReader;
 import org.springframework.util.StreamUtils;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * @Description: text文本段落读取
  * @Author: jay
@@ -21,7 +22,7 @@ import org.springframework.util.StreamUtils;
  * @Version: 1.0
  */
 public class ParagraphTextReader implements DocumentReader {
-
+    	private static Logger logger= LoggerFactory.getLogger(ParagraphTextReader.class);
 	public static final String CHARSET_METADATA = "charset";
 
 	public static final String SOURCE_METADATA = "source";
@@ -96,13 +97,17 @@ public class ParagraphTextReader implements DocumentReader {
 			//采用窗口滑动读取
 			int startIndex = 0;
 			int endIndex = startIndex + this.windowSize;
+			int count = 0;
 			if (endIndex > paragraphs.size()) {
 				readDocuments.add(this.toDocument(paragraphs, startIndex + 1, paragraphs.size()));
+				count = count + 1;
 			} else {
 				for (; endIndex <= paragraphs.size(); startIndex++, endIndex++) {
 					readDocuments.add(this.toDocument(ListUtil.sub(paragraphs, startIndex, endIndex), startIndex + 1, endIndex));
+					count = count + 1;
 				}
 			}
+			logger.info("total document count : " + count);
 			return readDocuments;
 	}
 

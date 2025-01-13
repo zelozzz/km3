@@ -122,6 +122,32 @@ import org.springframework.core.io.FileUrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import redis.clients.jedis.JedisPooled;
+import redis.clients.jedis.Jedis;
+import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.vectorstore.redis.RedisVectorStore;
+import org.springframework.ai.ollama.api.OllamaApi;
+import org.springframework.ai.ollama.OllamaEmbeddingModel;
+import org.springframework.ai.ollama.api.OllamaModel;
+import org.springframework.ai.ollama.api.OllamaOptions;
+import org.springframework.ai.ollama.management.ModelManagementOptions;
+import org.springframework.ai.ollama.management.PullModelStrategy;
+import redis.clients.jedis.search.IndexDataType;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.json.Path2;
+import redis.clients.jedis.search.FTCreateParams;
+import redis.clients.jedis.search.IndexDataType;
+import redis.clients.jedis.search.Schema.FieldType;
+import redis.clients.jedis.search.SearchResult;
+import redis.clients.jedis.search.schemafields.NumericField;
+import redis.clients.jedis.search.schemafields.SchemaField;
+import redis.clients.jedis.search.schemafields.TagField;
+import redis.clients.jedis.search.schemafields.TextField;
+import redis.clients.jedis.search.schemafields.VectorField;
+import redis.clients.jedis.search.schemafields.VectorField.VectorAlgorithm;
 
 @Service
 @Slf4j
@@ -165,8 +191,8 @@ public class KmDocServiceImpl extends ServiceImpl<KmDocMapper, KmDoc> implements
     private IKmSysConfigService kmSysConfigService;
     @Autowired
     private IKmDocVersionService kmDocVersionService;
-	@Autowired
-	private VectorStore vectorStore;
+//	@Autowired
+//	private VectorStore vectorStore;
 
 	@Autowired
 	private OllamaChatModel ollamaChatModel;
@@ -1502,6 +1528,7 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
 	try {    
 	    chat(kmDocEsParamVO.getContent());
 	}catch(Exception e){
+	    e.printStackTrace();
 	    log.warn("exception: the vectorstore maybe empty which trigger the exception");
 	}
         Map<String, String[]> parameterMap = req.getParameterMap();
@@ -1756,10 +1783,11 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
   		List<Document> docs = null;
 		try {
 			ParagraphTextReader reader = new ParagraphTextReader(documentContent, 5);
-			reader.getCustomMetadata().put("filename", name);
-			reader.getCustomMetadata().put("filepath", abspath);
+			//reader.getCustomMetadata().put("filename", name);
+			//reader.getCustomMetadata().put("filepath", abspath);
 			docs = reader.get();
-			vectorStore.add(docs);
+			vectorStore().add(docs);
+			log.info("vectorStore added.");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1814,10 +1842,18 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
 	 * @param keyword 关键词
 	 * @return 文档列表
 	 */
-	public List<Document> search(String keyword) {
+	public List<Document> vectorSearch(String keyword) {
 		if(keyword != null){
-		   return mergeDocuments(vectorStore.similaritySearch(keyword));
+	           List<Document> docs = vectorStore().similaritySearch(keyword);
+		   if(docs!=null && docs.size()!=0)
+		   {
+		       return mergeDocuments(docs);
+		   }else{
+		       log.warn("similaritySearch : none of the " + keyword + " found");
+		       return null;
+		   }
 		}else{
+		   log.warn("similaritySearch: keyword is none, should not be none.");
 		   return null;
 		}
 	}
@@ -1832,7 +1868,7 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
 		//查询获取文档信息
 	    if(message != null && message.length() > 0){
 		log.info("Chat with VectorStore and ollama: "+ message);
-		List<Document> documents = search(message);
+		List<Document> documents = vectorSearch(message);
 
 		//提取文本内容
 		String content = documents.stream()
@@ -1862,4 +1898,60 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
 				""";
 		return String.format(promptText, message, context);
 	}
+public JedisPooled jedisPooled() {
+    return new JedisPooled("kykms-redis", 6379);
+}
+public VectorStore vectorStore() {
+                JedisPooled jedis = jedisPooled();
+    VectorStore vs = RedisVectorStore.builder(jedis, embeddingModel())
+        .indexName("custom-index")                // Optional: defaults to "spring-ai-index"
+        .prefix("custom-prefix:")                  // Optional: defaults to "embedding:"
+ //       .metadataFields(                         // Optional: define metadata fields for filtering
+ //           MetadataField.tag("country"),
+ //           MetadataField.numeric("year"))
+        .initializeSchema(true)                   // Optional: defaults to false
+//        .batchingStrategy(new TokenCountBatchingStrategy()) // Optional: defaults to TokenCountBatchingStrategy
+        .build();
+    /***/
+    /** fix spring-ai issue: not create indexName */
+    		// If index already exists don't do anything
+		if (jedis.ftList().contains("custom-index")) {
+			return vs;
+		}else{
+			String response = jedis.ftCreate("custom-index",
+				FTCreateParams.createParams().on(IndexDataType.JSON).addPrefix("custom-prefix:"), schemaFields());
+                        log.info("create custom-index vector store, result " + response);
+		}
+    return vs;
+}
+	private Iterable<SchemaField> schemaFields() {
+		Map<String, Object> vectorAttrs = new HashMap<>();
+		vectorAttrs.put("DIM", 768);/*FIXME: if you change the embedding model above, you MUST change to the corresponding dimension. bge_large_zh -> 1024, some -> 768*/
+		vectorAttrs.put("DISTANCE_METRIC", "COSINE");
+		vectorAttrs.put("TYPE", "FLOAT32");
+		List<SchemaField> fields = new ArrayList<>();
+		fields.add(TextField.of("$.content").as("content").weight(1.0));
+		fields.add(VectorField.builder()
+			.fieldName("$.embedding")
+		//	.algorithm(vectorAlgorithm())
+			.attributes(vectorAttrs)
+			.as("embedding")
+			.build());
+
+		return fields;
+	}
+
+// This can be any EmbeddingModel implementation
+public EmbeddingModel embeddingModel() {
+    OllamaApi ollamaApi = new OllamaApi("http://jeecg-boot-ollama-1:11434");	
+    OllamaOptions option =  OllamaOptions.builder().model("mofanke/dmeta-embedding-zh").build();
+			return OllamaEmbeddingModel.builder()
+				.ollamaApi(ollamaApi)
+				.defaultOptions(option)
+				.modelManagementOptions(ModelManagementOptions.builder()
+					.pullModelStrategy(PullModelStrategy.WHEN_MISSING)
+					.build())
+				.build();    
+}
+	
 }

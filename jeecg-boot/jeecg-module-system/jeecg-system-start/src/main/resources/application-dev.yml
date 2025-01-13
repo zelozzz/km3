@@ -39,8 +39,10 @@ management:
 spring:
   ai:
     vectorstore:
-      pgvector:
-        dimensions: 768
+      redis:
+        index-name: beers
+        prefix: "beers:"
+        initialize-schema: true
     ollama:
       base-url: http://jeecg-boot-ollama-1:11434
       chat:

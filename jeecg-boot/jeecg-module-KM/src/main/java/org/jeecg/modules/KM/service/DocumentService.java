@@ -30,8 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class DocumentService {
 
-	@Autowired
-	private VectorStore vectorStore;
+	private VectorStore vectorStore = null;
 
 	@Autowired
 	private OllamaChatModel ollamaChatModel;

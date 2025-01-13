@@ -19,6 +19,12 @@
             <version>${jeecgboot.version}</version>
         </dependency>
         <!-- DEMO 示例模块 -->
+	<dependency>
+		    <groupId>redis.clients</groupId>
+		        <artifactId>jedis</artifactId>
+			    <version>5.1.0</version> 
+		    </dependency>
+
         <dependency>
             <groupId>org.jeecgframework.boot</groupId>
             <artifactId>jeecg-module-KM</artifactId>
