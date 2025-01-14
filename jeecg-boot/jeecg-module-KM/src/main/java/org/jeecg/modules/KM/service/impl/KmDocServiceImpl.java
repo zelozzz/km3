@@ -1861,6 +1861,11 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
 		   {
 		       //FIXME: NOT KNOWN THE REASON WHY I SHOULD MERGE.
 		       //return mergeDocuments(docs);
+
+        for (Document document : docs) {
+            // 这里可以对 document 进行操作，例如打印其信息
+            log.info("the who vectorsearched document: " + document.getText()); 
+        }
 		       return docs;
 		   }else{
 		       log.warn("similaritySearch : none of the " + keyword + " found");
@@ -1890,8 +1895,15 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
 				.collect(Collectors.joining("\n"));
 
 		//封装prompt并调用大模型
-		String chatResponse = ollamaChatModel.call(getChatPrompt2String(message, content));
-		log.info("Chat response: " + chatResponse);
+		Boolean should_use_chatollama = false;
+		String chatResponse = null;
+		if(should_use_chatollama){
+			chatResponse = ollamaChatModel.call(getChatPrompt2String(message, content));
+			log.info("Chat response: " + chatResponse);
+		}else{
+		     chatResponse = content;
+		     log.info("Chatless response: " + chatResponse);
+		}
 		return chatResponse;
 	    }else{
 		    return null;
