@@ -1525,8 +1525,9 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
     }
 
     public KmSearchResultObjVO searchESKmDoc(Page<KmSearchResultVO> page, KmDocEsParamVO kmDocEsParamVO, HttpServletRequest req) throws IOException {
+	String rag = null;    
 	try {    
-	    chat(kmDocEsParamVO.getContent());
+	    rag = ragchat(kmDocEsParamVO.getContent());
 	}catch(Exception e){
 	    e.printStackTrace();
 	    log.warn("exception: the vectorstore maybe empty which trigger the exception");
@@ -1801,9 +1802,20 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
 	 * @return 合并后的文档列表
 	 */
 	private List<Document> mergeDocuments(List<Document> documentList) {
+        for (Document document : documentList) {
+            // 这里可以对 document 进行操作，例如打印其信息
+            log.info("vectorsearched document: " + document.getText()); 
+        }
 		List<Document> mergeDocuments = new ArrayList();
 		//根据文档来源进行分组
-		Map<String, List<Document>> documentMap = documentList.stream().collect(Collectors.groupingBy(item -> ((String) item.getMetadata().get("source"))));
+        Map<String, List<Document>> documentMap = documentList.stream()
+              .collect(Collectors.groupingBy(item -> {
+                    String source = null;
+                    if (item.getMetadata()!= null) {
+                        source = (String) item.getMetadata().get("source");
+                    }
+                    return source == null? "defaultKey" : source;
+                }));
 		for (Entry<String, List<Document>> docListEntry : documentMap.entrySet()) {
 			//获取最大的段落结束编码
 			int maxParagraphNum = (int) docListEntry.getValue()
@@ -1814,7 +1826,7 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
 			int minParagraphNum = maxParagraphNum;
 			for (Document document : docListEntry.getValue()) {
 				//文档内容根据回车进行分段
-				String[] tempPs = document.getContent().split("\n");
+				String[] tempPs = document.getText().split("\n");
 				//获取文档开始段落编码
 				int startParagraphNumber = (int) document.getMetadata().get(START_PARAGRAPH_NUMBER);
 				if (minParagraphNum > startParagraphNumber) {
@@ -1847,7 +1859,9 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
 	           List<Document> docs = vectorStore().similaritySearch(keyword);
 		   if(docs!=null && docs.size()!=0)
 		   {
-		       return mergeDocuments(docs);
+		       //FIXME: NOT KNOWN THE REASON WHY I SHOULD MERGE.
+		       //return mergeDocuments(docs);
+		       return docs;
 		   }else{
 		       log.warn("similaritySearch : none of the " + keyword + " found");
 		       return null;
@@ -1864,7 +1878,7 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
 	 * @param message 输入内容
 	 * @return 回答内容
 	 */
-	public String chat(String message) {
+	public String ragchat(String message) {
 		//查询获取文档信息
 	    if(message != null && message.length() > 0){
 		log.info("Chat with VectorStore and ollama: "+ message);
@@ -1872,7 +1886,7 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
 
 		//提取文本内容
 		String content = documents.stream()
-				.map(Document::getContent)
+				.map(Document::getText)
 				.collect(Collectors.joining("\n"));
 
 		//封装prompt并调用大模型
@@ -1933,7 +1947,7 @@ public VectorStore vectorStore() {
 		fields.add(TextField.of("$.content").as("content").weight(1.0));
 		fields.add(VectorField.builder()
 			.fieldName("$.embedding")
-		//	.algorithm(vectorAlgorithm())
+			.algorithm(VectorAlgorithm.HNSW)
 			.attributes(vectorAttrs)
 			.as("embedding")
 			.build());
