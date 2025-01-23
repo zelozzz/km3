@@ -1548,14 +1548,22 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
         // 构建最终查询条件
         BoolQuery.Builder boolFinalQueryBuilder = new BoolQuery.Builder();
     
+	log.info("search paramVo :" + kmDocEsParamVO);
         // 过滤条件
         if (kmDocEsParamVO.getFilterParams() != null && !kmDocEsParamVO.getFilterParams().isEmpty()) {
             BoolQuery.Builder filterQueryParamsBuilder = esUtils.buildESQueryParams(kmDocEsParamVO.getFilterParams());
             BoolQuery filterQueryParams = filterQueryParamsBuilder.build();
             boolFinalQueryBuilder.filter(filterQueryParams._toQuery());
+	    log.info("filter is not null");
         }
     
         // 标题和全文检索条件
+        boolean useShould = false;	
+        if (oConvertUtils.isNotEmpty(kmDocEsParamVO.getTitle())) {
+            if (oConvertUtils.isNotEmpty(kmDocEsParamVO.getContent())) {
+		useShould = true;
+	    }
+	}
         if (oConvertUtils.isNotEmpty(kmDocEsParamVO.getTitle())) {
             kmSearchRecord.setTitle(kmDocEsParamVO.getTitle());
             Query titleQuery = null;
@@ -1564,7 +1572,12 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
             }else{
                 titleQuery = MatchQuery.of(m -> m.field("title").query(FieldValue.of(kmDocEsParamVO.getTitle())).analyzer("ik_smart").boost(kmConstant.getTitleSearchBoost()))._toQuery();
             }
-            boolFinalQueryBuilder.must(titleQuery);
+	    if(useShould){
+            	boolFinalQueryBuilder.should(titleQuery);
+	    }else{
+            	boolFinalQueryBuilder.must(titleQuery);
+	    }
+	    log.info("title is not null.");
         }
     
         if (oConvertUtils.isNotEmpty(kmDocEsParamVO.getContent())) {
@@ -1572,7 +1585,14 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
             Query contentQuery = kmDocEsParamVO.getPhraseMatchSearchFlag() != null && kmDocEsParamVO.getPhraseMatchSearchFlag()
                     ? MatchPhraseQuery.of(m -> m.field("content").query(kmDocEsParamVO.getContent()).slop(2))._toQuery()
                     : MatchQuery.of(m -> m.field("content").query(FieldValue.of(kmDocEsParamVO.getContent())).analyzer("ik_smart").boost(kmConstant.getContentSearchBoost()))._toQuery();
-            boolFinalQueryBuilder.must(contentQuery);
+            if(useShould) {
+	        boolFinalQueryBuilder.should(contentQuery);
+                // 设置至少满足一个 should 条件
+                boolFinalQueryBuilder.minimumShouldMatch("1");
+	    }else{
+                boolFinalQueryBuilder.must(contentQuery);
+	    }
+	    log.info("content is not null.");
         }
     
         // 分类过滤
@@ -1582,15 +1602,18 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
                 .map(FieldValue::of)
                 .collect(Collectors.toList());
             boolFinalQueryBuilder.filter(TermsQuery.of(t -> t.field("category").terms(terms -> terms.value(categoryValues)))._toQuery());
+	    log.info("category is not null.");
         }
     
         // 发布时间范围过滤
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         if (kmDocEsParamVO.getCreateTimeEnd() != null) {
             boolFinalQueryBuilder.filter(RangeQuery.of(r -> r.field("createTime").lte(JsonData.of(format.format(kmDocEsParamVO.getCreateTimeEnd()))))._toQuery());
+	    log.info("createTime is not null.");
         }
         if (kmDocEsParamVO.getCreateTimeStart() != null) {
             boolFinalQueryBuilder.filter(RangeQuery.of(r -> r.field("createTime").gte(JsonData.of(format.format(kmDocEsParamVO.getCreateTimeStart()))))._toQuery());
+	    log.info("createTime is not null.");
         }
     
         // 发布状态过滤
@@ -1608,18 +1631,30 @@ System.out.println("kmDocEsVO: " + json); // 打印 JSON 数据
         int size = Math.toIntExact(Math.min(page.getSize(), 100));
     
         // 构建搜索请求
+	// 构建搜索请求的查询部分并保存到一个变量中
+var query = boolFinalQueryBuilder.build()._toQuery();
+
+// 打印查询内容
+log.info("Built query: {}", query);
         SearchRequest searchRequest = SearchRequest.of(s -> s
                 .index(KMConstant.DocIndexAliasName)
-                .query(boolFinalQueryBuilder.build()._toQuery())
+                .query(query)
                 .highlight(highlight)
                 .from(from)
                 .size(size)
                 .timeout(String.format("%ss",KMConstant.SearchTimeOutSeconds))
                 .source(sf -> sf.filter(f -> f.excludes("content"))));
-    
+         
+	log.info("search request: " + searchRequest);
+	// 打印构建的搜索请求的关键信息
+        log.info("Executing search request with index: {}, from: {}, size: {}, timeout: {}s",
+                KMConstant.DocIndexAliasName, from, size, KMConstant.SearchTimeOutSeconds);
         // 执行搜索
         SearchResponse<KmDocEsVO> searchResponse = openSearchClient.search(searchRequest, KmDocEsVO.class);
     
+	log.info("search response: " + searchResponse);
+// 打印响应结果的关键信息
+        log.info("Search completed. Total hits: {}", searchResponse.hits().total().value());
         // 处理搜索结果
         if (searchResponse.hits().total().value() <= 0) {
             kmSearchResultObjVO.setKmSearchResultVOPage(resultVOPage);
