@@ -32,7 +32,7 @@ public class AIChatServiceImpl implements IAIChatService {
 
 
     // 系统提示词
-//    private final static String SYSTEM_PROMPT = """
+//    private final static String SYSTEM_PROMPT1 = """
 //            你需要使用文档内容对用户提出的问题进行回复，同时你需要表现得天生就知道这些内容，
 //            不能在回复中体现出你是根据给出的文档内容进行回复的，这点非常重要。
 //            当用户提出的问题无法根据文档内容进行回复或者你也不清楚时，回复不知道即可。

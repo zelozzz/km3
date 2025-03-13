@@ -1,10 +1,10 @@
 base:
-  upload-dir: /kykms/kmdocs 
+  upload-dir: /kykms/kmdocs
   db-backup-dir: /kykms/db
-  soffice-path: /usr/bin/soffice 
+  soffice-path: /usr/bin/soffice
   one-system-url:
 esclient:
-  master-host: kykms-ES 
+  master-host: kykms-es
   master-port: 9200
   master-auth: true
   master-user-name: admin
@@ -44,16 +44,16 @@ spring:
         index: "custom-index"
         initialize-schema: true
     ollama:
-      base-url: http://192.168.10.235:11434
+      base-url: http://ollama:11434
       init:
         pull-model-strategy: always
         embedding:
           additional-models:
             - mofanke/dmeta-embedding-zh
       chat:
-#        model: qwen2
-#        model:  deepseek-r1:1.5b
-        model:  deepseek-r1:7b
+        #        model: qwen2
+        #        model:  deepseek-r1:1.5b
+        model: deepseek-r1:7b
       embedding:
         model: mofanke/dmeta-embedding-zh
   # flyway配置
@@ -213,7 +213,7 @@ spring:
   data:
     redis:
       database: 0
-      host: kykms-redis 
+      host: kykms-redis
       port: 6379
       password:
 #mybatis plus 设置
@@ -255,10 +255,10 @@ jeecg:
     #文件上传根目录 设置
     upload: /opt/upFiles
     #webapp文件路径
-    webapp: /opt/webapp
+    webapp: /opt/webapprandomImage
   shiro:
-    excludeUrls: /test/jeecgDemo/demo3,/test/jeecgDemo/redisDemo/**,/bigscreen/category/**,/bigscreen/visual/**,/bigscreen/map/**,/jmreport/bigscreen2/**,/KM/kmSysConfig/listAllConfig,/category/**,/sys/loginThird,/sys/loginAuto,/KM/EsMgnt/**,/onlyoffice/**
-  #阿里云oss存储和大鱼短信秘钥配置
+    excludeUrls: /KM/chat/**,/actuator/**,/test/jeecgDemo/demo3,/test/jeecgDemo/redisDemo/**,/bigscreen/category/**,/bigscreen/visual/**,/bigscreen/map/**,/jmreport/bigscreen2/**,/KM/kmSysConfig/listAllConfig,/category/**,/sys/loginThird,/sys/loginAuto,/KM/EsMgnt/**,/onlyoffice/**
+  #阿里云oss存储和大鱼短信秘钥配置randomImage
   oss:
     accessKey: ??
     secretKey: ??
@@ -280,7 +280,7 @@ jeecg:
   #大屏报表参数设置
   jmreport:
     #多租户模式，默认值为空(created:按照创建人隔离、tenant:按照租户隔离) (v1.6.2+ 新增)
-    saasMode: 
+    saasMode:
     # 平台上线安全配置(v1.6.2+ 新增)
     firewall:
       # 数据源安全 (开启后，不允许使用平台数据源、SQL解析加签并且不允许查询数据库)
@@ -315,9 +315,9 @@ jeecg:
     # 超时时间单位:s。默认 60s
     timeout: 60
     # 本地代理地址
-#    proxy:
-#      host: "http://127.0.0.1"
-#      port: "7890"
+  #    proxy:
+  #      host: "http://127.0.0.1"
+  #      port: "7890"
   # 百度开放API配置
   baidu-api:
     app-id: ??

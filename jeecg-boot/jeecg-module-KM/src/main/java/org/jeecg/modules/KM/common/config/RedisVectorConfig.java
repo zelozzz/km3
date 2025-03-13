@@ -48,15 +48,15 @@ public class RedisVectorConfig {
                                    ObjectProvider<ObservationRegistry> observationRegistry,
                                    ObjectProvider<VectorStoreObservationConvention> customObservationConvention,
                                    BatchingStrategy batchingStrategy) {
-//        return RedisVectorStore.builder(
-//                new JedisPooled(redisProperties.getHost(),
-//                        redisProperties.getPort()),
-//                embeddingModel
-//        ).build();
-        return ((RedisVectorStore.Builder) ((RedisVectorStore.Builder) RedisVectorStore.builder(new JedisPooled(redisProperties.getHost(), redisProperties.getPort()),
+        return RedisVectorStore.builder(new JedisPooled(redisProperties.getHost(), redisProperties.getPort()),
                         embeddingModel).initializeSchema(properties.isInitializeSchema())
-                .observationRegistry((ObservationRegistry) observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP)))
-                .customObservationConvention((VectorStoreObservationConvention) customObservationConvention.getIfAvailable(() -> null)))
-                .batchingStrategy(batchingStrategy).indexName(properties.getIndex()).prefix(properties.getPrefix()).build();
+                .observationRegistry(observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP))
+                .customObservationConvention(customObservationConvention.getIfAvailable(() -> null))
+                .batchingStrategy(batchingStrategy)
+                .indexName(properties.getIndex()).prefix(properties.getPrefix())
+                .metadataFields(                         // 可选:定义用于过滤的元数据字段
+                        RedisVectorStore.MetadataField.tag("country"),
+                        RedisVectorStore.MetadataField.numeric("year"))
+                .build();
     }
 }
